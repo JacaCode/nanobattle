@@ -1,0 +1,88 @@
+Protocolo de Ação
+=================
+
+Este protocolo permite controlar robôs, recebendo dados de sensores e enviando
+dados de atuadores.
+
+Fase de Reunião
+---------------
+
+Nesta fase, o servidor aguarda a conexão de clientes na porta 1700, utilizando
+o protocolo REQ/REP.
+
+Para conectar um robô ao servidor, o cliente precisa enviar um request contendo
+um nome de identificação. Se a requisição for aceita, o servidor enviará como
+reply um número de identificação. Caso contrário, uma mensagem de erro será
+enviada como reply. Atualmente a única mensagem de erro possível é "DUPLICATE",
+para o caso em que o nome de identificação requisitado já esteja em uso.
+
+Qualquer cliente pode concluir a fase de reunião, bastando enviar um request
+"ENDGROUP". O servidor enviará a este cliente um reply "OK" e nenhum novo robô
+poderá se conectar após isto.
+
+Para que a porta do servidor fique livre, cada cliente deve desconectar-se
+imediatamente após ter sua requisição respondida na porta 1700. Se o mesmo
+cliente precisar fazer outra requisição na mesma porta, basta iniciar uma nova
+conexão.
+
+Exemplo de sessão:
+client A REQ: fulano    server REP: 1
+client B REQ: fulano    server REP: DUPLICATE
+client B REQ: cicrano   server REP: 2
+client A REQ: ENDGROUP  server REP: OK
+
+Fase de Controle
+----------------
+
+Esta fase se inicia assim que a fase de reunião é concluída e dura até o fim de
+uma batalha. Na fase de controle o servidor estabelece uma conexão para cada
+robô, utilizando novamente o protocolo REQ/REP. A porta de cada conexão é dada
+por 1700+ID, onde ID é o número de identificação do robô.
+
+Diferentemente do que ocorre na fase anterior, agora as conexões são mantidas
+até a conclusão da fase. Além disso, o servidor é que envia requests para os
+clientes, enquanto estes enviam replies para o servidor.
+
+O primeiro request do servidor será igual para todos os clientes e terá o
+formato "W H N", onde W e H são as dimensões do cenário e N é o número de robôs.
+Todos os clientes deverão enviar um reply "OK" quando estiverem prontos para
+iniciar a batalha.
+
+A cada turno, o servidor enviará um request para cada cliente contendo os dados
+do respectivo robô. Cada cliente deverá então responder com um conjunto de
+estados desejados para os atuadores do robô. O servidor irá arbitrar a batalha,
+de forma que os estados desejados somente serão realizados se estiverem de
+acordo com as regras do jogo. Após determinar os estados de todos os robôs, o
+servidor atualizará o estado global da batalha (ver o protocolo de visualização
+abaixo), encerrando um turno e começando outro.
+
+O request enviado pelo servidor terá o formato "BX BY BD GD RD RV E1 E2 E3 ...",
+onde BX e BY especificam a posição do robô, BD, GD e RD a direção do robô, do
+canhão e do radar, respectivamente, RV o número de robôs visíveis no radar e En
+a energia atual de cada robô.
+
+O reply enviado pelo cliente deverá ter o formato "BR BM GR GF RR RC", onde BR e
+BM são a rotação e deslocamento do robô, GR e GF são a rotação e acionamento do
+canhão, RR e RC são a rotação e calibração do radar. Todos estes campos devem
+conter um dos seguintes três caracteres: "+" para positivo, "-" para negativo e
+"=" para neutro.
+
+
+Protocolo de Visualização
+=========================
+
+Este protocolo permite visualizar o estado do servidor.
+
+É utilizada apenas uma conexão na porta 1800 do tipo PUB/SUB.
+
+TODO: inicialização da view (resolução, cores, etc)
+
+A cada turno, o servidor irá publicar uma sequência de mensagens com o estado
+atual de cada robô e cada tiro.
+
+A primeira mensagem tem formato "N M", onde N é o número de robôs e M é o
+número de tiros.
+As N próximas mensagens tem formato "BX BY BD GD RD RR E", onde BX e BY
+especificam a posição do robô, BD, GD e RD a direção do robô, do canhão e do
+radar, respectivamente, RR o raio do radar e E a energia do robô.
+As M próximas mensagens tem o formato "X Y", onde X e Y são a posição do tiro.
