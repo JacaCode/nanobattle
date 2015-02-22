@@ -162,8 +162,15 @@ local rdr = sdl.createRenderer(win, -1, sdl.RENDERER_ACCELERATED)
 local pa = num.." "..num
 local pb = string.rep(num.." ", 6)..num
 local pc = num.." "..num
+local pevent = ffi.new("SDL_Event[1]")
 local running = true
 while running do
+    while sdl.pollEvent(pevent) == 1 do
+        local event = pevent[0]
+        if event.type == sdl.KEYDOWN and event.key.keysym.sym == sdl.K_q then
+            running = false
+        end
+    end
     local n, m = string.match(recv(sock), pa)
     local bots = {}
     for i = 1, n do
