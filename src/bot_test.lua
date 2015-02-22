@@ -6,11 +6,8 @@ function client.Bot:init()
 end
 
 function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
-    if self.frame < 10 then
-        self.bot_rot = "+"
-    else
-        self.bot_rot = "="
-    end
+    self.bot_rot = self.frame < 10 and "+" or "="
+    self.rad_rot = self.frame % 10 < 2 and "-" or "="
     self.frame = (self.frame + 1) % 100
 end
 
