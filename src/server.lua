@@ -145,7 +145,6 @@ function Server:init_bots()
             energy = 100
         }
         set_radar_radius(bot, 8*BOT_RADIUS)
-        print("waiting for "..self.names[id])
         bot.sock = bind(self.port+id, nn.REQ)
         assert(request(bot.sock, msg) == "OK")
         self.bots[id] = bot
