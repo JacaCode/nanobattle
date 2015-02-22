@@ -177,9 +177,10 @@ while running do
         local color = COLORS[i]
         local bx, by, bd, gd, rd, rr, e = string.match(recv(sock), pb)
         bots[i] = {
-            cx = tonumber(bx), cy = tonumber(by), dir = tonumber(bd),
+            cx = tonumber(bx), cy = tonumber(by), dir = math.rad(tonumber(bd)),
             r = color[1], g = color[2], b = color[3], a = 255,
-            gun_dir = tonumber(gd), rad_dir = tonumber(rd), energy = tonumber(e)
+            gun_dir = math.rad(tonumber(gd)), rad_dir = math.rad(tonumber(rd)),
+            energy = tonumber(e)
         }
         set_radar_radius(bots[i], tonumber(rr))
     end
