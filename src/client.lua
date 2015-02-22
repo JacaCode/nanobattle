@@ -6,9 +6,16 @@ local nn = require "nanomsg"
 local len = 256
 local buf = ffi.new("char[?]", len)
 
-local function request(ip, port, req)
+local Client = {}
+Client.__index = Client
+
+local function new_client(ip, port)
+    return setmetatable({ip = ip, port = port}, Client)
+end
+
+function Client:request(req)
     local err, sock, rc, size, rep
-    local url = "tcp://"..ip..":"..tostring(port)
+    local url = "tcp://"..self.ip..":"..tostring(self.port)
 
     sock, err = nn.socket(nn.REQ)
     assert(sock, nn.strerror(err))
@@ -21,41 +28,43 @@ local function request(ip, port, req)
     return ffi.string(buf, size)
 end
 
-local function join(ip, port, name)
-    local err, sock, rc
-    local rep = request(ip, port, name)
-    assert(rep ~= "DUPLICATE")
-    local id = tonumber(rep)
-    local url = "tcp://"..ip..":"..tostring(port+id)
-    sock, err = nn.socket(nn.REP)
-    assert(sock, nn.strerror(err))
-    rc, err = sock:connect(url)
+function Client:join(name)
+    local err, rc
+    local rep = self:request(name)
+    if rep == "DUPLICATE" then
+        return nil
+    end
+    self.id, self.name = tonumber(rep), name
+    local url = "tcp://"..self.ip..":"..tostring(self.port+self.id)
+    self.sock, err = nn.socket(nn.REP)
+    assert(self.sock, nn.strerror(err))
+    rc, err = self.sock:connect(url)
     assert(rc ~= nil, nn.strerror(err))
-    return sock, id
+    return self.id
 end
 
-local function end_group(ip, port)
-    assert(request(ip, port, "ENDGROUP") == "OK")
+function Client:end_group()
+    assert(self:request("ENDGROUP") == "OK")
 end
 
-local function control_loop(sock)
+function Client:control_loop()
     local err, size
-    size, err = sock:recv(buf, len)
+    size, err = self.sock:recv(buf, len)
     assert(size ~= nil, nn.strerror(err))
-    size, err = sock:send("OK", 2)
+    size, err = self.sock:send("OK", 2)
     assert(size ~= nil, nn.strerror(err))
     while true do
-        size, err = sock:recv(buf, len)
+        size, err = self.sock:recv(buf, len)
         assert(size ~= nil, nn.strerror(err))
-        size, err = sock:send("++====", 6)
+        size, err = self.sock:send("++====", 6)
         assert(size ~= nil, nn.strerror(err))
     end
 end
 
-local ip = "127.0.0.1"
-local port = 1700
-local sock, id = join(ip, port, arg[1])
-if id == 5 then
-    end_group(ip, port)
+local client = new_client("127.0.0.1", 1700)
+local id = client:join(arg[1])
+if id == nil then
+elseif id == 6 then
+    client:end_group()
 end
-control_loop(sock)
+client:control_loop()
