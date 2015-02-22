@@ -1,7 +1,11 @@
 local client = require "client"
 
+function client.Bot:init()
+    self.bot_rot = "+"
+    self.bot_move = "+"
+end
+
 function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
-    return "++===="
 end
 
 local bot = client.new_bot("127.0.0.1", 1700)

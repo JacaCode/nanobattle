@@ -16,7 +16,13 @@ local Bot = {}
 Bot.__index = Bot
 
 local function new_bot(ip, port)
-    return setmetatable({ip = ip, port = port}, Bot)
+    local bot = {
+        ip = ip, port = port,
+        bot_rot = "=", bot_move = "=",
+        gun_rot = "=", gun_fire = "=",
+        rad_rot = "=", rad_cal = "="
+    }
+    return setmetatable(bot, Bot)
 end
 
 function Bot:request(req)
@@ -72,7 +78,11 @@ function Bot:run()
         for e in string.gmatch(s2, "-?%d+") do
             es[#es+1] = tonumber(e)
         end
-        local msg = self:turn(bx, by, bd, gd, rd, rv, es)
+        self:turn(bx, by, bd, gd, rd, rv, es)
+        local msg = (
+            self.bot_rot..self.bot_move..self.gun_rot ..
+            self.gun_fire..self.rad_rot..self.rad_cal
+        )
         size, err = self.sock:send(msg, #msg)
         assert(size ~= nil, nn.strerror(err))
     end
