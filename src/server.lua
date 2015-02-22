@@ -14,14 +14,7 @@ local RADAR_AREA = 5000
 local RADAR_MIN_RADIUS = math.sqrt(2*RADAR_AREA/math.pi)
 local RADAR_MAX_RADIUS = math.sqrt(2*RADAR_AREA/(math.pi/60))
 
-local COLORS = {
-    {255, 0, 0},
-    {0, 255, 0},
-    {0, 0, 255},
-    {255, 255, 0},
-    {0, 255, 255},
-    {255, 0, 255}
-}
+local MAX_CLIENTS = tonumber(arg[1]) or 6
 
 local function set_radar_angle(bot, angle)
     bot.rad_angle = angle
@@ -87,7 +80,7 @@ function Server:get_group()
     local n = 0
     local group = {}
     local group_open = true
-    while group_open and n < #COLORS do
+    while group_open and n < MAX_CLIENTS do
         size, err = sock:recv(buf, len)
         assert(size ~= nil, nn.strerror(err))
         if size > 0 then
@@ -127,12 +120,10 @@ function Server:init_bots()
     msg = string.format("%d %d %d", self.width, self.height, #self.names)
     self.bots = {}
     for id = 1, #self.names do
-        local color = COLORS[id]
         local bot = {
             cx = math.random(BOT_RADIUS, self.width-BOT_RADIUS),
             cy = math.random(BOT_RADIUS, self.height-BOT_RADIUS),
             dir = math.random()*2*math.pi,
-            r = color[1], g = color[2], b = color[3], a = 255,
             gun_dir = math.random()*2*math.pi,
             rad_dir = math.random()*2*math.pi,
             energy = 100
