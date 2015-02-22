@@ -6,14 +6,20 @@ local nn = require "nanomsg"
 local len = 256
 local buf = ffi.new("char[?]", len)
 
-local Client = {}
-Client.__index = Client
-
-local function new_client(ip, port)
-    return setmetatable({ip = ip, port = port}, Client)
+local function get_nums(str, n)
+    local num = "(-?%d+)"
+    local pattern = string.rep(num.." ", n-1)..num
+    return string.match(str, pattern)
 end
 
-function Client:request(req)
+local Bot = {}
+Bot.__index = Bot
+
+local function new_bot(ip, port)
+    return setmetatable({ip = ip, port = port}, Bot)
+end
+
+function Bot:request(req)
     local err, sock, rc, size, rep
     local url = "tcp://"..self.ip..":"..tostring(self.port)
 
@@ -28,7 +34,7 @@ function Client:request(req)
     return ffi.string(buf, size)
 end
 
-function Client:join(name)
+function Bot:join(name)
     local err, rc
     local rep = self:request(name)
     if rep == "DUPLICATE" then
@@ -43,28 +49,33 @@ function Client:join(name)
     return self.id
 end
 
-function Client:end_group()
+function Bot:end_group()
     assert(self:request("ENDGROUP") == "OK")
 end
 
-function Client:control_loop()
+function Bot:run()
     local err, size
     size, err = self.sock:recv(buf, len)
     assert(size ~= nil, nn.strerror(err))
+    local w, h, n = get_nums(ffi.string(buf, size), 3)
+    if self.init ~= nil then
+        self:init(w, h, n)
+    end
     size, err = self.sock:send("OK", 2)
     assert(size ~= nil, nn.strerror(err))
     while true do
         size, err = self.sock:recv(buf, len)
         assert(size ~= nil, nn.strerror(err))
-        size, err = self.sock:send("++====", 6)
+        local s1, s2 = string.match(ffi.string(buf, size), "([^\n]*)\n(.*)")
+        local bx, by, bd, gd, rd, rv = get_nums(s1, 6)
+        local es = {}
+        for e in string.gmatch(s2, "-?%d+") do
+            es[#es+1] = tonumber(e)
+        end
+        local msg = self:turn(bx, by, bd, gd, rd, rv, es)
+        size, err = self.sock:send(msg, #msg)
         assert(size ~= nil, nn.strerror(err))
     end
 end
 
-local client = new_client("127.0.0.1", 1700)
-local id = client:join(arg[1])
-assert(id ~= nil, "name already in use")
-if id == 6 then
-    client:end_group()
-end
-client:control_loop()
+return {new_bot = new_bot, Bot = Bot}

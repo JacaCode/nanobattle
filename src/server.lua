@@ -193,7 +193,7 @@ function Server:control_loop()
             msg = msg..string.format("%d ", math.deg(bot.dir))
             msg = msg..string.format("%d ", math.deg(bot.gun_dir))
             msg = msg..string.format("%d ", math.deg(bot.rad_dir))
-            msg = msg..string.format("%d", 0)..energies
+            msg = msg..string.format("%d\n", 0)..energies
             cmd = request(bot.sock, msg)
             self:update_bot(id, cmd)
         end

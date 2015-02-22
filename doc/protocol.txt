@@ -56,7 +56,7 @@ acordo com as regras do jogo. Após determinar os estados de todos os robôs, o
 servidor atualizará o estado global da batalha (ver o protocolo de visualização
 abaixo), encerrando um turno e começando outro.
 
-O request enviado pelo servidor terá o formato "BX BY BD GD RD RV E1 E2 E3 ...",
+O request enviado pelo servidor terá o formato "BX BY BD GD RD RV\nE1 E2 E3 ...",
 onde BX e BY especificam a posição do robô, BD, GD e RD a direção do robô, do
 canhão e do radar, respectivamente, RV o número de robôs visíveis no radar e En
 a energia atual de cada robô.
