@@ -16,6 +16,22 @@ local RADAR_MAX_RADIUS = math.sqrt(2*RADAR_AREA/(math.pi/60))
 
 local MAX_CLIENTS = tonumber(arg[1]) or 6
 
+ffi.cdef[[
+void Sleep(int ms);
+int poll(struct pollfd *fds, unsigned long nfds, int timeout);
+]]
+
+local sleep
+if ffi.os == "Windows" then
+  function sleep(s)
+    ffi.C.Sleep(s*1000)
+  end
+else
+  function sleep(s)
+    ffi.C.poll(nil, 0, s*1000)
+  end
+end
+
 local function set_radar_angle(bot, angle)
     bot.rad_angle = angle
     bot.rad_radius = math.sqrt(2*RADAR_AREA/angle)
@@ -198,6 +214,7 @@ function Server:control_loop()
             self:update_bot(id, cmd)
         end
         self:update_view()
+        sleep(0.01)
     end
 end
 
