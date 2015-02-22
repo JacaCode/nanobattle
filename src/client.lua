@@ -63,8 +63,8 @@ end
 
 local client = new_client("127.0.0.1", 1700)
 local id = client:join(arg[1])
-if id == nil then
-elseif id == 6 then
+assert(id ~= nil, "name already in use")
+if id == 6 then
     client:end_group()
 end
 client:control_loop()
