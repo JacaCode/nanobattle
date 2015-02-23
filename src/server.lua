@@ -160,8 +160,19 @@ function Server:update_bullets()
         local bullet = self.bullets[i]
         bullet.cx = bullet.cx + 2 * STEP * math.cos(bullet.dir)
         bullet.cy = bullet.cy + 2 * STEP * math.sin(bullet.dir)
+        local active = false
         if bullet.cx >= 0 or bullet.cx <= WIN_WIDTH or
            bullet.cy >= 0 or bullet.cy <= WIN_HEIGHT then
+            active = true
+            for j = 1, #self.bots do
+                local bot = self.bots[j]
+                local dist = math.sqrt((bullet.cx-bot.cx)^2+(bullet.cy-bot.cy)^2)
+                if dist < BOT_RADIUS + BULLET_RADIUS then
+                    active = false
+                end
+            end
+        end
+        if active then
             new_bullets[#new_bullets+1] = bullet
         end
     end
