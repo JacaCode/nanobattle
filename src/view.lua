@@ -141,7 +141,8 @@ end
 local function draw_bot_energy(renderer, bot)
     local e = bot.energy
     local r = BOT_RADIUS
-    local rect = Rect(bot.cx-r, bot.cy-r-10, 2*r, 5)
+    local dy = bot.cy < BOT_RADIUS+10 and r+5 or -r-10
+    local rect = Rect(bot.cx-r, bot.cy+dy, 2*r, 5)
     sdl.setRenderDrawColor(renderer, 0, 0, 0, 255)
     sdl.renderFillRect(renderer, rect)
     sdl.setRenderDrawColor(renderer, (100-e/2)*255/100, e*255/100, 0, 255)
@@ -217,7 +218,7 @@ while running do
         bullets[i] = {x = tonumber(x), y = tonumber(y)}
     end
     clear(rdr, 130, 130, 150)
-    local layers = {draw_bot_energy, draw_bot_body, draw_bot_gun, draw_bot_radar}
+    local layers = {draw_bot_body, draw_bot_gun, draw_bot_radar, draw_bot_energy}
     for i = 1, #layers do
         local layer = layers[i]
         for j = 1, n do
