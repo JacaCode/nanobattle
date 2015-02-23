@@ -6,10 +6,6 @@ luajit server.lua $N 2>server.log &
 echo $! > server.pid
 sleep 1
 
-luajit view.lua 2>view.log &
-echo $! > view.pid
-sleep 1
-
 > bots.pid
 for i in `seq 1 $N`
 do

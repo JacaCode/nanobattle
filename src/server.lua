@@ -122,13 +122,6 @@ function Server:get_group()
     for name, id in pairs(group) do
         self.names[id] = name
     end
-    msg = string.format(
-        "%d %d %d %d %d",
-        WIN_WIDTH, WIN_HEIGHT,
-        BOT_RADIUS, BULLET_RADIUS,
-        RADAR_AREA
-    )
-    self:publish(msg)
 end
 
 function Server:init_bots()
@@ -178,7 +171,12 @@ end
 
 function Server:update_view()
     local err, size, msg
-    msg = string.format("%d %d", #self.bots, 0)
+    msg = string.format(
+        "! %d %d %d %d %d %d %d",
+        WIN_WIDTH, WIN_HEIGHT,
+        BOT_RADIUS, BULLET_RADIUS,
+        RADAR_AREA, #self.bots, 0
+    )
     self:publish(msg)
     for id = 1, #self.bots do
         local bot = self.bots[id]
