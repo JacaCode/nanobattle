@@ -82,7 +82,9 @@ A primeira mensagem tem formato "! W H BR FR RA N M", W e H são as dimensões d
 cenário, BR e FR são o raio de robô e tiro, respectivamente, RA é a área do
 radar, N e M são o número de robôs e tiros, respectivamente.
 
-As N próximas mensagens tem formato "BX BY BD GD RD RR E", onde BX e BY
-especificam a posição do robô, BD, GD e RD a direção do robô, do canhão e do
-radar, respectivamente, RR o raio do radar e E a energia do robô.
+As N próximas mensagens tem formato "ID BX BY BD GD RD RR E", onde ID é o número
+de identificação do robô, BX e BY especificam a posição do robô, BD, GD e RD a
+direção do robô, do canhão e do radar, respectivamente, RR o raio do radar e E a
+energia do robô.
+
 As M próximas mensagens tem o formato "X Y", onde X e Y são a posição do tiro.

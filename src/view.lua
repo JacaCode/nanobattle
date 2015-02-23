@@ -190,8 +190,8 @@ while running do
     w, h, br, fr, ra, n, m = string.match(recv(sock), pattern)
     local bots = {}
     for i = 1, n do
-        local color = COLORS[i]
-        local bx, by, bd, gd, rd, rr, e = string.match(recv(sock), pb)
+        local id, bx, by, bd, gd, rd, rr, e = string.match(recv(sock), pb)
+        local color = COLORS[tonumber(id)]
         bots[i] = {
             cx = tonumber(bx), cy = tonumber(by), dir = math.rad(tonumber(bd)),
             r = color[1], g = color[2], b = color[3], a = 255,

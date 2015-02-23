@@ -128,29 +128,30 @@ function Server:init_bots()
     local err, size, msg
     msg = string.format("%d %d %d", self.width, self.height, #self.names)
     self.bots = {}
-    for id = 1, #self.names do
+    self.energies = {}
+    for i = 1, #self.names do
         local bot = {
             cx = math.random(BOT_RADIUS, self.width-BOT_RADIUS),
             cy = math.random(BOT_RADIUS, self.height-BOT_RADIUS),
             dir = math.random()*2*math.pi,
             gun_dir = math.random()*2*math.pi,
             rad_dir = math.random()*2*math.pi,
-            energy = 100
+            energy = 100, id = i
         }
         set_radar_radius(bot, 8*BOT_RADIUS)
-        bot.sock = bind(self.port+id, nn.REQ)
+        bot.sock = bind(self.port+i, nn.REQ)
         assert(request(bot.sock, msg) == "OK")
-        self.bots[id] = bot
+        self.bots[i] = bot
+        self.energies[i] = bot.energy
     end
     self.bullets = {}
 end
 
-function Server:fire(id)
-    local bot = self.bots[id]
+function Server:fire(bot)
     self.bullets[#self.bullets+1] = {
         cx = bot.cx + math.cos(bot.gun_dir) * BOT_RADIUS,
         cy = bot.cy + math.sin(bot.gun_dir) * BOT_RADIUS,
-        dir = bot.gun_dir
+        dir = bot.gun_dir, id = bot.id
     }
 end
 
@@ -160,17 +161,31 @@ function Server:update_bullets()
         local bullet = self.bullets[i]
         bullet.cx = bullet.cx + 2 * STEP * math.cos(bullet.dir)
         bullet.cy = bullet.cy + 2 * STEP * math.sin(bullet.dir)
-        local active = false
-        if bullet.cx >= 0 or bullet.cx <= WIN_WIDTH or
-           bullet.cy >= 0 or bullet.cy <= WIN_HEIGHT then
-            active = true
+        local active = (
+            bullet.cx >= 0 or bullet.cx <= WIN_WIDTH or
+            bullet.cy >= 0 or bullet.cy <= WIN_HEIGHT
+        )
+        if active then
+            local new_bots = {}
             for j = 1, #self.bots do
                 local bot = self.bots[j]
-                local dist = math.sqrt((bullet.cx-bot.cx)^2+(bullet.cy-bot.cy)^2)
-                if dist < BOT_RADIUS + BULLET_RADIUS then
-                    active = false
+                if bot.id ~= bullet.id then
+                    local dx, dy = bullet.cx-bot.cx, bullet.cy-bot.cy
+                    local dist = math.sqrt(dx*dx + dy*dy)
+                    if dist < BOT_RADIUS + BULLET_RADIUS then
+                        print(self.names[bot.id].." hit by "..self.names[bullet.id])
+                        active = false
+                        bot.energy = bot.energy - 10
+                        self.energies[bot.id] = math.max(0, bot.energy)
+                    end
+                end
+                if bot.energy > 0 then
+                    new_bots[#new_bots+1] = bot
+                else
+                    print(tostring(self.names[bot.id].." destroyed"))
                 end
             end
+            self.bots = new_bots
         end
         if active then
             new_bullets[#new_bullets+1] = bullet
@@ -179,8 +194,7 @@ function Server:update_bullets()
     self.bullets = new_bullets
 end
 
-function Server:update_bot(id, cmd)
-    local bot = self.bots[id]
+function Server:update_bot(bot, cmd)
     local idx = {}
     idx['-'] = 1
     idx['='] = 2
@@ -207,7 +221,7 @@ function Server:update_bot(id, cmd)
     radius = math.min(RADAR_MAX_RADIUS, radius)
     set_radar_radius(bot, radius)
     if gun_fire == 1 then
-        self:fire(id)
+        self:fire(bot)
     end
 end
 
@@ -220,11 +234,11 @@ function Server:update_view()
         RADAR_AREA, #self.bots, #self.bullets
     )
     self:publish(msg)
-    for id = 1, #self.bots do
-        local bot = self.bots[id]
+    for i = 1, #self.bots do
+        local bot = self.bots[i]
         msg = string.format(
-            "%d %d %d %d %d %d %d",
-            bot.cx, bot.cy, math.deg(bot.dir),
+            "%d %d %d %d %d %d %d %d",
+            bot.id, bot.cx, bot.cy, math.deg(bot.dir),
             math.deg(bot.gun_dir),
             math.deg(bot.rad_dir), bot.rad_radius,
             bot.energy
@@ -243,19 +257,18 @@ function Server:control_loop()
     local running = true
     while running do
         local energies = ""
-        for id = 1, #self.bots do
-            local bot = self.bots[id]
-            energies = string.format("%s %d", energies, bot.energy)
+        for id = 1, #self.energies do
+            energies = energies..string.format(" %d", self.energies[id])
         end
-        for id = 1, #self.bots do
-            local bot = self.bots[id]
+        for i = 1, #self.bots do
+            local bot = self.bots[i]
             msg = string.format("%d %d ", bot.cx, bot.cy)
             msg = msg..string.format("%d ", math.deg(bot.dir))
             msg = msg..string.format("%d ", math.deg(bot.gun_dir))
             msg = msg..string.format("%d ", math.deg(bot.rad_dir))
             msg = msg..string.format("%d\n", 0)..energies
             cmd = request(bot.sock, msg)
-            self:update_bot(id, cmd)
+            self:update_bot(bot, cmd)
         end
         self:update_bullets()
         self:update_view()
