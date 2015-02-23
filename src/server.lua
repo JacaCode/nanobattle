@@ -206,10 +206,26 @@ function Server:update_bot(bot, cmd)
     local gun_fire = ({-1, 0, 1})[state[4]]
     local rad_rot = ({-1, 0, 1})[state[5]]
     local rad_cal = ({-4, 0, 4})[state[6]]
-    bot.cx = bot.cx + vel * STEP * math.cos(bot.dir)
-    bot.cy = bot.cy + vel * STEP * math.sin(bot.dir)
-    bot.cx = math.max(BOT_RADIUS, math.min(self.width-BOT_RADIUS, bot.cx))
-    bot.cy = math.max(BOT_RADIUS, math.min(self.height-BOT_RADIUS, bot.cy))
+    local cx, cy
+    cx = bot.cx + vel * STEP * math.cos(bot.dir)
+    cy = bot.cy + vel * STEP * math.sin(bot.dir)
+    cx = math.max(BOT_RADIUS, math.min(self.width-BOT_RADIUS, cx))
+    cy = math.max(BOT_RADIUS, math.min(self.height-BOT_RADIUS, cy))
+    local ok = true
+    for i = 1, #self.bots do
+        local other = self.bots[i]
+        if other.id ~= bot.id then
+            local dx, dy = other.cx-cx, other.cy-cy
+            local dist = math.sqrt(dx*dx + dy*dy)
+            if dist < 2*BOT_RADIUS then
+                ok = false
+                break
+            end
+        end
+    end
+    if ok then
+        bot.cx, bot.cy = cx, cy
+    end
     bot.dir = bot.dir + rot * STEP * math.pi / 30
     bot.gun_dir = bot.gun_dir + gun_rot * STEP * math.pi / 30
     bot.rad_dir = bot.rad_dir + rad_rot * STEP * math.pi / 30
