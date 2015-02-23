@@ -162,8 +162,8 @@ function Server:update_bullets()
         bullet.cx = bullet.cx + 2 * STEP * math.cos(bullet.dir)
         bullet.cy = bullet.cy + 2 * STEP * math.sin(bullet.dir)
         local active = (
-            bullet.cx >= 0 or bullet.cx <= WIN_WIDTH or
-            bullet.cy >= 0 or bullet.cy <= WIN_HEIGHT
+            bullet.cx >= 0 and bullet.cx <= WIN_WIDTH and
+            bullet.cy >= 0 and bullet.cy <= WIN_HEIGHT
         )
         if active then
             local new_bots = {}
