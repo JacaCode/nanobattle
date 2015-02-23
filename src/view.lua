@@ -138,6 +138,13 @@ local function draw_bot_radar(renderer, bot)
     )
 end
 
+local function draw_bullet(renderer, bullet)
+    gfx.filledCircleRGBA(
+        renderer, bullet.x, bullet.y, BULLET_RADIUS,
+        64, 56, 20, 255
+    )
+end
+
 local sock = init("127.0.0.1", 1800)
 local num = "(-?%d+)"
 
@@ -193,8 +200,10 @@ while running do
         }
         set_radar_radius(bots[i], tonumber(rr))
     end
+    local bullets = {}
     for i = 1, m do
         local x, y = string.match(recv(sock), pc)
+        bullets[i] = {x = tonumber(x), y = tonumber(y)}
     end
     clear(rdr, 160, 160, 160)
     for i = 1, n do
@@ -208,6 +217,9 @@ while running do
     for i = 1, n do
         local bot = bots[i]
         draw_bot_gun(rdr, bot)
+    end
+    for i = 1, m do
+        draw_bullet(rdr, bullets[i])
     end
     sdl.renderPresent(rdr)
     sdl.delay(10)

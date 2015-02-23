@@ -142,6 +142,30 @@ function Server:init_bots()
         assert(request(bot.sock, msg) == "OK")
         self.bots[id] = bot
     end
+    self.bullets = {}
+end
+
+function Server:fire(id)
+    local bot = self.bots[id]
+    self.bullets[#self.bullets+1] = {
+        cx = bot.cx + math.cos(bot.gun_dir) * BOT_RADIUS,
+        cy = bot.cy + math.sin(bot.gun_dir) * BOT_RADIUS,
+        dir = bot.gun_dir
+    }
+end
+
+function Server:update_bullets()
+    local new_bullets = {}
+    for i = 1, #self.bullets do
+        local bullet = self.bullets[i]
+        bullet.cx = bullet.cx + 2 * STEP * math.cos(bullet.dir)
+        bullet.cy = bullet.cy + 2 * STEP * math.sin(bullet.dir)
+        if bullet.cx >= 0 or bullet.cx <= WIN_WIDTH or
+           bullet.cy >= 0 or bullet.cy <= WIN_HEIGHT then
+            new_bullets[#new_bullets+1] = bullet
+        end
+    end
+    self.bullets = new_bullets
 end
 
 function Server:update_bot(id, cmd)
@@ -153,7 +177,7 @@ function Server:update_bot(id, cmd)
     local rot = ({-1, 0, 1})[idx[string.sub(cmd, 1, 1)]]
     local vel = ({-0.5, 0, 1})[idx[string.sub(cmd, 2, 2)]]
     local gun_rot = ({-1, 0, 1})[idx[string.sub(cmd, 3, 3)]]
-    local action = ({-1, 0, 1})[idx[string.sub(cmd, 4, 4)]]
+    local gun_fire = ({-1, 0, 1})[idx[string.sub(cmd, 4, 4)]]
     local rad_rot = ({-1, 0, 1})[idx[string.sub(cmd, 5, 5)]]
     local rad_cal = ({-4, 0, 4})[idx[string.sub(cmd, 6, 6)]]
     bot.cx = bot.cx + vel * STEP * math.cos(bot.dir)
@@ -167,6 +191,9 @@ function Server:update_bot(id, cmd)
     radius = math.max(RADAR_MIN_RADIUS, radius)
     radius = math.min(RADAR_MAX_RADIUS, radius)
     set_radar_radius(bot, radius)
+    if gun_fire == 1 then
+        self:fire(id)
+    end
 end
 
 function Server:update_view()
@@ -175,7 +202,7 @@ function Server:update_view()
         "! %d %d %d %d %d %d %d",
         WIN_WIDTH, WIN_HEIGHT,
         BOT_RADIUS, BULLET_RADIUS,
-        RADAR_AREA, #self.bots, 0
+        RADAR_AREA, #self.bots, #self.bullets
     )
     self:publish(msg)
     for id = 1, #self.bots do
@@ -187,6 +214,11 @@ function Server:update_view()
             math.deg(bot.rad_dir), bot.rad_radius,
             bot.energy
         )
+        self:publish(msg)
+    end
+    for i = 1, #self.bullets do
+        local bullet = self.bullets[i]
+        msg = string.format("%d %d", bullet.cx, bullet.cy)
         self:publish(msg)
     end
 end
@@ -210,6 +242,7 @@ function Server:control_loop()
             cmd = request(bot.sock, msg)
             self:update_bot(id, cmd)
         end
+        self:update_bullets()
         self:update_view()
         sleep(0.01)
     end
