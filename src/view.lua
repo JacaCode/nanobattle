@@ -138,6 +138,17 @@ local function draw_bot_radar(renderer, bot)
     )
 end
 
+local function draw_bot_energy(renderer, bot)
+    local e = bot.energy
+    local r = BOT_RADIUS
+    local rect = Rect(bot.cx-r, bot.cy-r-10, 2*r, 5)
+    sdl.setRenderDrawColor(renderer, 0, 0, 0, 255)
+    sdl.renderFillRect(renderer, rect)
+    sdl.setRenderDrawColor(renderer, (100-e/2)*255/100, e*255/100, 0, 255)
+    rect.w = rect.w * e / 100
+    sdl.renderFillRect(renderer, rect)
+end
+
 local function draw_bullet(renderer, bullet)
     gfx.filledCircleRGBA(
         renderer, bullet.x, bullet.y, BULLET_RADIUS,
@@ -176,7 +187,7 @@ local win = sdl.createWindow(
 
 local rdr = sdl.createRenderer(win, -1, sdl.RENDERER_ACCELERATED)
 
-local pb = string.rep(num.." ", 6)..num
+local pb = string.rep(num.." ", 7)..num
 local pc = num.." "..num
 local pevent = ffi.new("SDL_Event[1]")
 local running = true
@@ -205,7 +216,11 @@ while running do
         local x, y = string.match(recv(sock), pc)
         bullets[i] = {x = tonumber(x), y = tonumber(y)}
     end
-    clear(rdr, 160, 160, 160)
+    clear(rdr, 130, 130, 150)
+    for i = 1, n do
+        local bot = bots[i]
+        draw_bot_energy(rdr, bot)
+    end
     for i = 1, n do
         local bot = bots[i]
         draw_bot_body(rdr, bot)
