@@ -78,7 +78,7 @@ Este protocolo permite visualizar o estado do servidor.
 A cada turno, o servidor irá publicar uma sequência de mensagens com o estado
 atual de cada robô e cada tiro.
 
-A primeira mensagem tem formato "W H BR FR RA N M", W e H são as dimensões do
+A primeira mensagem tem formato "! W H BR FR RA N M", W e H são as dimensões do
 cenário, BR e FR são o raio de robô e tiro, respectivamente, RA é a área do
 radar, N e M são o número de robôs e tiros, respectivamente.
 
