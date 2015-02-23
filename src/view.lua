@@ -134,7 +134,7 @@ local function draw_bot_radar(renderer, bot)
         renderer,
         bot.cx, bot.cy, bot.rad_radius,
         math.deg(a1), math.deg(a2),
-        255, 255, 255, 128
+        255, 255, 255, 96
     )
 end
 
@@ -217,21 +217,12 @@ while running do
         bullets[i] = {x = tonumber(x), y = tonumber(y)}
     end
     clear(rdr, 130, 130, 150)
-    for i = 1, n do
-        local bot = bots[i]
-        draw_bot_energy(rdr, bot)
-    end
-    for i = 1, n do
-        local bot = bots[i]
-        draw_bot_body(rdr, bot)
-    end
-    for i = 1, n do
-        local bot = bots[i]
-        draw_bot_radar(rdr, bot)
-    end
-    for i = 1, n do
-        local bot = bots[i]
-        draw_bot_gun(rdr, bot)
+    local layers = {draw_bot_energy, draw_bot_body, draw_bot_gun, draw_bot_radar}
+    for i = 1, #layers do
+        local layer = layers[i]
+        for j = 1, n do
+            layer(rdr, bots[j])
+        end
     end
     for i = 1, m do
         draw_bullet(rdr, bullets[i])
