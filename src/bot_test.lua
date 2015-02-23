@@ -9,7 +9,7 @@ function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
     self.bot_rot = self.frame < 10 and "+" or "="
     self.rad_rot = self.frame % 10 < 2 and "-" or "="
     self.gun_rot = self.frame % 20 < 2 and "+" or "="
-    self.gun_fire = self.frame == 0 and "+" or "="
+    self.gun_fire = self.frame % 25 == 0 and "+" or "="
     self.frame = (self.frame + 1) % 100
 end
 

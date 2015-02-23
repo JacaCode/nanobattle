@@ -6,7 +6,7 @@ local nn = require "nanomsg"
 local len = 256
 local buf = ffi.new("char[?]", len)
 
-local WIN_WIDTH, WIN_HEIGHT = 800, 600
+local WIN_WIDTH, WIN_HEIGHT = 900, 600
 local STEP = 2
 local BOT_RADIUS = 20
 local BULLET_RADIUS = 4
@@ -173,7 +173,6 @@ function Server:update_bullets()
                     local dx, dy = bullet.cx-bot.cx, bullet.cy-bot.cy
                     local dist = math.sqrt(dx*dx + dy*dy)
                     if dist < BOT_RADIUS + BULLET_RADIUS then
-                        print(self.names[bot.id].." hit by "..self.names[bullet.id])
                         active = false
                         bot.energy = bot.energy - 10
                         self.energies[bot.id] = math.max(0, bot.energy)
@@ -181,8 +180,6 @@ function Server:update_bullets()
                 end
                 if bot.energy > 0 then
                     new_bots[#new_bots+1] = bot
-                else
-                    print(tostring(self.names[bot.id].." destroyed"))
                 end
             end
             self.bots = new_bots
