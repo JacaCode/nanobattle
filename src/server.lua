@@ -174,12 +174,16 @@ function Server:update_bot(id, cmd)
     idx['-'] = 1
     idx['='] = 2
     idx['+'] = 3
-    local rot = ({-1, 0, 1})[idx[string.sub(cmd, 1, 1)]]
-    local vel = ({-0.5, 0, 1})[idx[string.sub(cmd, 2, 2)]]
-    local gun_rot = ({-1, 0, 1})[idx[string.sub(cmd, 3, 3)]]
-    local gun_fire = ({-1, 0, 1})[idx[string.sub(cmd, 4, 4)]]
-    local rad_rot = ({-1, 0, 1})[idx[string.sub(cmd, 5, 5)]]
-    local rad_cal = ({-4, 0, 4})[idx[string.sub(cmd, 6, 6)]]
+    local state = {}
+    for i = 1, 6 do
+        state[i] = idx[string.sub(cmd, i, i)]
+    end
+    local rot = ({-1, 0, 1})[state[1]]
+    local vel = ({-0.5, 0, 1})[state[2]]
+    local gun_rot = ({-1, 0, 1})[state[3]]
+    local gun_fire = ({-1, 0, 1})[state[4]]
+    local rad_rot = ({-1, 0, 1})[state[5]]
+    local rad_cal = ({-4, 0, 4})[state[6]]
     bot.cx = bot.cx + vel * STEP * math.cos(bot.dir)
     bot.cy = bot.cy + vel * STEP * math.sin(bot.dir)
     bot.cx = math.max(BOT_RADIUS, math.min(self.width-BOT_RADIUS, bot.cx))
