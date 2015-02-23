@@ -222,6 +222,7 @@ while running do
         draw_bullet(rdr, bullets[i])
     end
     sdl.renderPresent(rdr)
+    sdl.setWindowTitle(win, string.format("%s %d %d", TITLE, n, m))
     sdl.delay(10)
 end
 
