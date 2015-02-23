@@ -9,13 +9,13 @@ end
 
 function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
     if self.frame == 0 then
-        self.rot_length = math.random(10)
+        self.rot_length = math.random(20)
     end
     if self.frame % 10 == 0 then
         self.rot_dir = ({"-", "+"})[math.random(2)]
     end
-    self.bot_rot = self.frame < self.rot_length and "+" or "="
-    self.rad_rot = self.frame % 10 < 2 and self.rot_dir or "="
+    self.bot_rot = self.frame < self.rot_length and self.rot_dir or "="
+    self.rad_rot = self.frame % 10 < 2 and "+" or "="
     self.gun_rot = self.frame % 20 < 2 and "+" or "="
     self.gun_fire = self.frame % 25 == 0 and "+" or "="
     self.frame = (self.frame + 1) % 100
