@@ -248,6 +248,15 @@ function Server:update_bullets()
                 end
                 if bot.energy > 0 then
                     new_bots[#new_bots+1] = bot
+                else
+                    -- give energy boost to killer bot.
+                    for k = 1, #self.bots do
+                        local other = self.bots[k]
+                        if other.id == bullet.id then
+                            other.energy = math.min(100, other.energy+10)
+                            break
+                        end
+                    end
                 end
             end
             self.bots = new_bots
