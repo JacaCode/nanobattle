@@ -315,7 +315,7 @@ function Server:update_bot(bot, cmd)
         self:fire(bot)
         bot.wait = 50
     end
-    bot.wait = bot.wait - 1
+    bot.wait = math.max(0, bot.wait - 1)
 end
 
 function Server:update_radars()
@@ -350,9 +350,9 @@ function Server:update_view()
     for i = 1, #self.bots do
         local bot = self.bots[i]
         msg = string.format(
-            "%d %d %d %d %d %d %d %d %d",
+            "%d %d %d %d %d %d %d %d %d %d",
             bot.id, bot.cx, bot.cy, math.deg(bot.dir),
-            math.deg(bot.gun_dir),
+            math.deg(bot.gun_dir), bot.wait,
             math.deg(bot.rad_dir), bot.rad_radius,
             bot.visible, bot.energy
         )

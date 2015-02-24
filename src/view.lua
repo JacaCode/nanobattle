@@ -114,7 +114,8 @@ local function draw_bot_body(renderer, bot)
 end
 
 local function draw_bot_gun(renderer, bot)
-    local o, s = math.pi / 20, 1.3
+    local o = math.pi / 20
+    local s = 1.3 - bot.wait * 0.8 / 50
     local cosa, sina = math.cos(bot.gun_dir), math.sin(bot.gun_dir)
     local cosb, sinb = math.cos(bot.gun_dir-o), math.sin(bot.gun_dir-o)
     local cosc, sinc = math.cos(bot.gun_dir+o), math.sin(bot.gun_dir+o)
@@ -194,7 +195,7 @@ local win = sdl.createWindow(
 
 local rdr = sdl.createRenderer(win, -1, sdl.RENDERER_ACCELERATED)
 
-local pb = string.rep(num.." ", 8)..num
+local pb = string.rep(num.." ", 9)..num
 local pc = num.." "..num
 local pevent = ffi.new("SDL_Event[1]")
 local running = true
@@ -209,13 +210,13 @@ while running do
     local bots = {}
     local vis = 0
     for i = 1, n do
-        local id, bx, by, bd, gd, rd, rr, rv, e = string.match(recv(sock), pb)
+        local id, bx, by, bd, gd, gw, rd, rr, rv, e = string.match(recv(sock), pb)
         local color = COLORS[tonumber(id)]
         local bot = {
             cx = tonumber(bx), cy = tonumber(by), dir = math.rad(tonumber(bd)),
             r = color[1], g = color[2], b = color[3], a = 255,
             gun_dir = math.rad(tonumber(gd)), rad_dir = math.rad(tonumber(rd)),
-            visible = tonumber(rv), energy = tonumber(e)
+            wait = tonumber(gw), visible = tonumber(rv), energy = tonumber(e)
         }
         set_radar_radius(bot, tonumber(rr))
         vis = vis + bot.visible
