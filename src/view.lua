@@ -41,7 +41,7 @@ local function Rect(x, y, w, h)
     return ffi.new("SDL_Rect", {x, y, w, h})
 end
 
-local TITLE = "bots"
+local TITLE = "nanobattle"
 local WIN_WIDTH, WIN_HEIGHT
 local BOT_RADIUS
 local BULLET_RADIUS
@@ -207,16 +207,19 @@ while running do
     end
     w, h, br, fr, ra, n, m = string.match(recv(sock), pattern)
     local bots = {}
+    local vis = 0
     for i = 1, n do
         local id, bx, by, bd, gd, rd, rr, rv, e = string.match(recv(sock), pb)
         local color = COLORS[tonumber(id)]
-        bots[i] = {
+        local bot = {
             cx = tonumber(bx), cy = tonumber(by), dir = math.rad(tonumber(bd)),
             r = color[1], g = color[2], b = color[3], a = 255,
             gun_dir = math.rad(tonumber(gd)), rad_dir = math.rad(tonumber(rd)),
-            visible = tonumber(rv),energy = tonumber(e)
+            visible = tonumber(rv), energy = tonumber(e)
         }
-        set_radar_radius(bots[i], tonumber(rr))
+        set_radar_radius(bot, tonumber(rr))
+        vis = vis + bot.visible
+        bots[i] = bot
     end
     local bullets = {}
     for i = 1, m do
@@ -235,7 +238,11 @@ while running do
         draw_bullet(rdr, bullets[i])
     end
     sdl.renderPresent(rdr)
-    sdl.setWindowTitle(win, string.format("%s %d %d", TITLE, n, m))
+    local title = string.format(
+        "%s: %d bots, %d visible, %d bullets",
+        TITLE, n, vis, m
+    )
+    sdl.setWindowTitle(win, title)
     sdl.delay(10)
 end
 
