@@ -1,3 +1,5 @@
+package.path = package.path .. ";../src/?.lua"
+
 local client = require "client"
 
 function client.Bot:init(w, h, r, n)
