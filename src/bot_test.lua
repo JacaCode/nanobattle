@@ -1,7 +1,8 @@
 local client = require "client"
 
-function client.Bot:init(w, h, n)
+function client.Bot:init(w, h, r, n)
     math.randomseed(os.time() + self.id)
+    self.w, self.h, self.r = w, h, r
     self.frame = math.random(100)
     self.rot_length = 0
     self.rot_dir = "="

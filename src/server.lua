@@ -191,7 +191,10 @@ end
 
 function Server:init_bots()
     local err, size, msg
-    msg = string.format("%d %d %d", self.width, self.height, #self.names)
+    msg = string.format(
+        "%d %d %d %d",
+        self.width, self.height, BOT_RADIUS, #self.names
+    )
     self.bots = {}
     self.energies = {}
     for i = 1, #self.names do

@@ -65,9 +65,9 @@ function Bot:run()
     local err, size
     size, err = self.sock:recv(buf, len)
     assert(size ~= nil, nn.strerror(err))
-    local w, h, n = get_nums(ffi.string(buf, size))
+    local w, h, r, n = get_nums(ffi.string(buf, size))
     if self.init ~= nil then
-        self:init(w, h, n)
+        self:init(w, h, r, n)
     end
     size, err = self.sock:send("OK", 2)
     assert(size ~= nil, nn.strerror(err))

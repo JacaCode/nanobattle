@@ -44,9 +44,9 @@ até a conclusão da fase. Além disso, o servidor é que envia requests para os
 clientes, enquanto estes enviam replies para o servidor.
 
 O primeiro request do servidor será igual para todos os clientes e terá o
-formato "W H N", onde W e H são as dimensões do cenário e N é o número de robôs.
-Todos os clientes deverão enviar um reply "OK" quando estiverem prontos para
-iniciar a batalha.
+formato "W H R N", onde W e H são as dimensões do cenário, R é o raio dos robôs
+e N é o número de robôs. Todos os clientes deverão enviar um reply "OK" quando
+estiverem prontos para iniciar a batalha.
 
 A cada turno, o servidor enviará um request para cada cliente contendo os dados
 do respectivo robô. Cada cliente deverá então responder com um conjunto de
