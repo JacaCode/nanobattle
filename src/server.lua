@@ -200,7 +200,7 @@ function Server:init_bots()
             cx = math.random(BOT_RADIUS, self.width-BOT_RADIUS),
             cy = math.random(BOT_RADIUS, self.height-BOT_RADIUS),
             dir = dir, gun_dir = dir, rad_dir = dir,
-            energy = 100, id = i
+            energy = 100, wait = 0, id = i
         }
         set_radar_radius(bot, 8*BOT_RADIUS)
         bot.sock = bind(self.port+i, nn.REQ)
@@ -299,9 +299,11 @@ function Server:update_bot(bot, cmd)
     radius = math.max(RADAR_MIN_RADIUS, radius)
     radius = math.min(RADAR_MAX_RADIUS, radius)
     set_radar_radius(bot, radius)
-    if gun_fire == 1 then
+    if gun_fire == 1 and bot.wait <= 0 then
         self:fire(bot)
+        bot.wait = 50
     end
+    bot.wait = bot.wait - 1
 end
 
 function Server:update_radars()
