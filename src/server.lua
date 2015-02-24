@@ -97,6 +97,18 @@ local function radar_collision(rad_x, rad_y, rad_r, rad_d, rad_a, x, y, r)
     return false
 end
 
+local function shield_collision(sx, sy, sd, sa, x, y)
+    local left_angle = sd - sa/2
+    local left_x = sx + math.cos(left_angle)
+    local left_y = sy + math.sin(left_angle)
+    local right_angle = sd + sa/2
+    local right_x = sx + math.cos(right_angle)
+    local right_y = sy + math.sin(right_angle)
+    local cld = (sx - x) * (left_y - sy) - (sx - left_x) * (y - sy)
+    local crd = (sx - x) * (right_y - sy) - (sx - right_x) * (y - sy)
+    return cld > 0 and crd < 0
+end
+
 local function set_radar_angle(bot, angle)
     bot.rad_angle = angle
     bot.rad_radius = math.sqrt(2*RADAR_AREA/angle)
@@ -203,7 +215,7 @@ function Server:init_bots()
             cx = math.random(BOT_RADIUS, self.width-BOT_RADIUS),
             cy = math.random(BOT_RADIUS, self.height-BOT_RADIUS),
             dir = dir, gun_dir = dir, rad_dir = dir,
-            energy = 100, wait = 0, id = i
+            energy = 100, wait = 0, shield = 0, id = i
         }
         set_radar_radius(bot, 8*BOT_RADIUS)
         bot.sock = bind(self.port+i, nn.REQ)
@@ -222,6 +234,30 @@ function Server:fire(bot)
     }
 end
 
+function Server:hit(bullet, bot)
+    local damage = 10
+    if bot.shield > 0 then
+        if shield_collision(
+            bot.cx, bot.cy, bot.rad_dir, bot.rad_angle,
+            bullet.cx, bullet.cy
+        ) then
+            damage = 3
+        end
+    end
+    bot.energy = math.max(0, bot.energy - damage)
+    self.energies[bot.id] = bot.energy
+    if bot.energy == 0 then
+        -- give energy boost to killer bot.
+        for i = 1, #self.bots do
+            local other = self.bots[i]
+            if other.id == bullet.id then
+                other.energy = math.min(100, other.energy+10)
+                break
+            end
+        end
+    end
+end
+
 function Server:update_bullets()
     local new_bullets = {}
     for i = 1, #self.bullets do
@@ -236,27 +272,21 @@ function Server:update_bullets()
             local new_bots = {}
             for j = 1, #self.bots do
                 local bot = self.bots[j]
+                local alive = true
                 if bot.id ~= bullet.id then
                     if disk_collision(
                         bullet.cx, bullet.cy, BULLET_RADIUS,
                         bot.cx, bot.cy, BOT_RADIUS
                     ) then
                         active = false
-                        bot.energy = bot.energy - 10
-                        self.energies[bot.id] = math.max(0, bot.energy)
-                    end
-                end
-                if bot.energy > 0 then
-                    new_bots[#new_bots+1] = bot
-                else
-                    -- give energy boost to killer bot.
-                    for k = 1, #self.bots do
-                        local other = self.bots[k]
-                        if other.id == bullet.id then
-                            other.energy = math.min(100, other.energy+10)
-                            break
+                        self:hit(bullet, bot)
+                        if bot.energy == 0 then
+                            alive = false
                         end
                     end
+                end
+                if alive then
+                    new_bots[#new_bots+1] = bot
                 end
             end
             self.bots = new_bots
@@ -280,7 +310,7 @@ function Server:update_bot(bot, cmd)
     local rot = ({-1, 0, 1})[state[1]]
     local vel = ({-0.5, 0, 1})[state[2]]
     local gun_rot = ({-1, 0, 1})[state[3]]
-    local gun_fire = ({-1, 0, 1})[state[4]]
+    local action = ({-1, 0, 1})[state[4]]
     local rad_rot = ({-1, 0, 1})[state[5]]
     local rad_cal = ({-4, 0, 4})[state[6]]
     local cx, cy
@@ -311,11 +341,18 @@ function Server:update_bot(bot, cmd)
     radius = math.max(RADAR_MIN_RADIUS, radius)
     radius = math.min(RADAR_MAX_RADIUS, radius)
     set_radar_radius(bot, radius)
-    if gun_fire == 1 and bot.wait <= 0 then
-        self:fire(bot)
-        bot.wait = 50
+    if bot.wait > 0 then
+        bot.wait = bot.wait - 1
+    else
+        bot.shield = 0
+        if action == 1 then
+            self:fire(bot)
+            bot.wait = 50
+        elseif action == -1 then
+            bot.shield = 1
+            bot.wait = 50
+        end
     end
-    bot.wait = math.max(0, bot.wait - 1)
 end
 
 function Server:update_radars()
@@ -350,9 +387,9 @@ function Server:update_view()
     for i = 1, #self.bots do
         local bot = self.bots[i]
         msg = string.format(
-            "%d %d %d %d %d %d %d %d %d %d",
+            "%d %d %d %d %d %d %d %d %d %d %d",
             bot.id, bot.cx, bot.cy, math.deg(bot.dir),
-            math.deg(bot.gun_dir), bot.wait,
+            math.deg(bot.gun_dir), bot.wait, bot.shield,
             math.deg(bot.rad_dir), bot.rad_radius,
             bot.visible, bot.energy
         )

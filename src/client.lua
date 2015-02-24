@@ -21,7 +21,7 @@ local function new_bot(ip, port)
     local bot = {
         ip = ip, port = port,
         bot_rot = "=", bot_move = "=",
-        gun_rot = "=", gun_fire = "=",
+        gun_rot = "=", action = "=",
         rad_rot = "=", rad_cal = "="
     }
     return setmetatable(bot, Bot)
@@ -83,7 +83,7 @@ function Bot:run()
         self:turn(bx, by, bd, gd, rd, rv, es)
         local msg = (
             self.bot_rot..self.bot_move..self.gun_rot ..
-            self.gun_fire..self.rad_rot..self.rad_cal
+            self.action..self.rad_rot..self.rad_cal
         )
         size, err = self.sock:send(msg, #msg)
         assert(size ~= nil, nn.strerror(err))

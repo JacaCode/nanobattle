@@ -18,9 +18,17 @@ function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
     end
     self.bot_rot = self.frame < self.rot_length and self.rot_dir or "="
     self.rad_rot = self.frame % 20 < 2 and "+" or "="
-    self.rad_cal = ({"-", "=", "+"})[math.random(3)]
     self.gun_rot = self.frame % 20 < 2 and "+" or "="
-    self.gun_fire = rv > 0 and "+" or "="
+    if rv > 0 then
+        self.action = "+"
+        self.rad_cal = "+"
+    elseif es[self.id] < 50 and math.random() < 0.1 then
+        self.action = "-"
+        self.rad_cal = "-"
+    else
+        self.action = "="
+        self.rad_cal = ({"-", "=", "+"})[math.random(3)]
+    end
     self.frame = (self.frame + 1) % 100
 end
 

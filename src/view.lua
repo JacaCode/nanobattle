@@ -115,7 +115,12 @@ end
 
 local function draw_bot_gun(renderer, bot)
     local o = math.pi / 20
-    local s = 1.3 - bot.wait * 0.8 / 50
+    local s
+    if bot.shield == 0 then
+        s = 1.3 - bot.wait * 0.8 / 50
+    else
+        s = 0.5
+    end
     local cosa, sina = math.cos(bot.gun_dir), math.sin(bot.gun_dir)
     local cosb, sinb = math.cos(bot.gun_dir-o), math.sin(bot.gun_dir-o)
     local cosc, sinc = math.cos(bot.gun_dir+o), math.sin(bot.gun_dir+o)
@@ -126,6 +131,20 @@ local function draw_bot_gun(renderer, bot)
         bot.cx + cosc * BOT_RADIUS*s, bot.cy + sinc * BOT_RADIUS*s,
         0, 0, 0, bot.a
     )
+end
+
+local function draw_bot_shield(renderer, bot)
+    if bot.shield == 1 then
+        local a1 = bot.rad_dir - bot.rad_angle/2
+        local a2 = bot.rad_dir + bot.rad_angle/2
+        local s = 1 + bot.wait * 0.3 / 50
+        gfx.filledPieRGBA(
+            renderer,
+            bot.cx, bot.cy, BOT_RADIUS*s,
+            math.deg(a1), math.deg(a2),
+            255, 255, 255, 255
+        )
+    end
 end
 
 local function draw_bot_radar(renderer, bot)
@@ -195,7 +214,7 @@ local win = sdl.createWindow(
 
 local rdr = sdl.createRenderer(win, -1, sdl.RENDERER_ACCELERATED)
 
-local pb = string.rep(num.." ", 9)..num
+local pb = string.rep(num.." ", 10)..num
 local pc = num.." "..num
 local pevent = ffi.new("SDL_Event[1]")
 local running = true
@@ -210,13 +229,14 @@ while running do
     local bots = {}
     local vis = 0
     for i = 1, n do
-        local id, bx, by, bd, gd, gw, rd, rr, rv, e = string.match(recv(sock), pb)
+        local id, bx, by, bd, gd, gw, s, rd, rr, rv, e = string.match(recv(sock), pb)
         local color = COLORS[tonumber(id)]
         local bot = {
             cx = tonumber(bx), cy = tonumber(by), dir = math.rad(tonumber(bd)),
             r = color[1], g = color[2], b = color[3], a = 255,
             gun_dir = math.rad(tonumber(gd)), rad_dir = math.rad(tonumber(rd)),
-            wait = tonumber(gw), visible = tonumber(rv), energy = tonumber(e)
+            wait = tonumber(gw), shield = tonumber(s),
+            visible = tonumber(rv), energy = tonumber(e)
         }
         set_radar_radius(bot, tonumber(rr))
         vis = vis + bot.visible
@@ -228,7 +248,10 @@ while running do
         bullets[i] = {x = tonumber(x), y = tonumber(y)}
     end
     clear(rdr, 130, 130, 150)
-    local layers = {draw_bot_body, draw_bot_gun, draw_bot_radar, draw_bot_energy}
+    local layers = {
+        draw_bot_shield, draw_bot_body, draw_bot_gun,
+        draw_bot_radar, draw_bot_energy
+    }
     for i = 1, #layers do
         local layer = layers[i]
         for j = 1, n do
