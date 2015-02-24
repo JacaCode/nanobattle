@@ -195,12 +195,11 @@ function Server:init_bots()
     self.bots = {}
     self.energies = {}
     for i = 1, #self.names do
+        local dir = math.random()*2*math.pi
         local bot = {
             cx = math.random(BOT_RADIUS, self.width-BOT_RADIUS),
             cy = math.random(BOT_RADIUS, self.height-BOT_RADIUS),
-            dir = math.random()*2*math.pi,
-            gun_dir = math.random()*2*math.pi,
-            rad_dir = math.random()*2*math.pi,
+            dir = dir, gun_dir = dir, rad_dir = dir,
             energy = 100, id = i
         }
         set_radar_radius(bot, 8*BOT_RADIUS)
