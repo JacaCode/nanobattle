@@ -6,10 +6,12 @@ local nn = require "nanomsg"
 local len = 256
 local buf = ffi.new("char[?]", len)
 
-local function get_nums(str, n)
-    local num = "(-?%d+)"
-    local pattern = string.rep(num.." ", n-1)..num
-    return string.match(str, pattern)
+local function get_nums(str)
+    local nums = {}
+    for s in string.gmatch(str, "-?%d+") do
+        nums[#nums+1] = tonumber(s)
+    end
+    return unpack(nums)
 end
 
 local Bot = {}
@@ -63,7 +65,7 @@ function Bot:run()
     local err, size
     size, err = self.sock:recv(buf, len)
     assert(size ~= nil, nn.strerror(err))
-    local w, h, n = get_nums(ffi.string(buf, size), 3)
+    local w, h, n = get_nums(ffi.string(buf, size))
     if self.init ~= nil then
         self:init(w, h, n)
     end
@@ -73,7 +75,7 @@ function Bot:run()
         size, err = self.sock:recv(buf, len)
         assert(size ~= nil, nn.strerror(err))
         local s1, s2 = string.match(ffi.string(buf, size), "([^\n]*)\n(.*)")
-        local bx, by, bd, gd, rd, rv = get_nums(s1, 6)
+        local bx, by, bd, gd, rd, rv = get_nums(s1)
         local es = {}
         for e in string.gmatch(s2, "-?%d+") do
             es[#es+1] = tonumber(e)
