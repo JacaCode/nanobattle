@@ -32,6 +32,71 @@ else
   end
 end
 
+local function disk_collision(x1, y1, r1, x2, y2, r2)
+    local dx, dy = x2-x1, y2-y1
+    local d = math.sqrt(dx*dx + dy*dy)
+    return d < r1+r2
+end
+
+local function line_collision(x1, y1, x2, y2, x, y, r)
+    -- compute the projection P of (x, y) on the line.
+    local dx, dy = x2-x1, y2-y1
+    local s = (dx * (y-y1) + dy * (x1-x)) / (dx*dx + dy*dy)
+    local px, py = x + dy * s, y - dx * s
+    -- check if P is inside the bounding box of the line segment.
+    local inside = (
+        math.min(x1, x2) < px and px < math.max(x1, x2) and
+        math.min(y1, y2) < py and py < math.max(y1, y2)
+    )
+    -- compute the distance between the disk center and the segment,
+    local dist
+    if inside then
+        -- dist = distance between (x, y) and P
+        local dx, dy = x-px, y-py
+        dist = math.sqrt(dx*dx + dy*dy)
+    else
+        -- dist = distance between (x, y) and its closest segment endpoint
+        local dx1, dy1 = x-x1, y-y1
+        local d1 = math.sqrt(dx1*dx1 + dy1*dy1)
+        local dx2, dy2 = x-x2, y-y2
+        local d2 = math.sqrt(dx2*dx2 + dy2*dy2)
+        dist = math.min(d1, d2)
+    end
+    return dist < r
+end
+
+local function radar_collision(rad_x, rad_y, rad_r, rad_d, rad_a, x, y, r)
+    -- check if disk intersects radar disk.
+    if disk_collision(rad_x, rad_y, rad_r, x, y, r) then
+        -- check if disk intersects either of radar segments.
+        local left_angle = rad_d - rad_a/2
+        local left_x = rad_x + rad_r * math.cos(left_angle)
+        local left_y = rad_y + rad_r * math.sin(left_angle)
+        if line_collision(rad_x, rad_y, left_x, left_y, x, y, r) then
+            return true
+        end
+        local right_angle = rad_d + rad_a/2
+        local right_x = rad_x + rad_r * math.cos(right_angle)
+        local right_y = rad_y + rad_r * math.sin(right_angle)
+        if line_collision(rad_x, rad_y, right_x, right_y, x, y, r) then
+            return true
+        end
+        -- check if disk center is within radar angle range:
+        --  let C be the center of the radar;
+        --  let L & R be the left & right segment endpoints of the radar;
+        --  let D be the center of the disk;
+        --  the disk center is within radar angle range iif the signed areas
+        --  of triangles CLD and CRD are positive and negative, respectively.
+        -- here the shoelace formula is used to get the doubled signed area.
+        local cld = (rad_x - x) * (left_y - rad_y) - (rad_x - left_x) * (y - rad_y)
+        local crd = (rad_x - x) * (right_y - rad_y) - (rad_x - right_x) * (y - rad_y)
+        if cld > 0 and crd < 0 then
+            return true
+        end
+    end
+    return false
+end
+
 local function set_radar_angle(bot, angle)
     bot.rad_angle = angle
     bot.rad_radius = math.sqrt(2*RADAR_AREA/angle)
@@ -170,9 +235,10 @@ function Server:update_bullets()
             for j = 1, #self.bots do
                 local bot = self.bots[j]
                 if bot.id ~= bullet.id then
-                    local dx, dy = bullet.cx-bot.cx, bullet.cy-bot.cy
-                    local dist = math.sqrt(dx*dx + dy*dy)
-                    if dist < BOT_RADIUS + BULLET_RADIUS then
+                    if disk_collision(
+                        bullet.cx, bullet.cy, BULLET_RADIUS,
+                        bot.cx, bot.cy, BOT_RADIUS
+                    ) then
                         active = false
                         bot.energy = bot.energy - 10
                         self.energies[bot.id] = math.max(0, bot.energy)
@@ -215,9 +281,10 @@ function Server:update_bot(bot, cmd)
     for i = 1, #self.bots do
         local other = self.bots[i]
         if other.id ~= bot.id then
-            local dx, dy = other.cx-cx, other.cy-cy
-            local dist = math.sqrt(dx*dx + dy*dy)
-            if dist < 2*BOT_RADIUS then
+            if disk_collision(
+                other.cx, other.cy, BOT_RADIUS,
+                cx, cy, BOT_RADIUS
+            ) then
                 ok = false
                 break
             end
@@ -238,6 +305,26 @@ function Server:update_bot(bot, cmd)
     end
 end
 
+function Server:update_radars()
+    for i = 1, #self.bots do
+        local bot = self.bots[i]
+        local visible = 0
+        for j = 1, #self.bots do
+            if j ~= i then
+                local other = self.bots[j]
+                if radar_collision(
+                    bot.cx, bot.cy, bot.rad_radius,
+                    bot.rad_dir, bot.rad_angle,
+                    other.cx, other.cy, BOT_RADIUS
+                ) then
+                    visible = visible + 1
+                end
+            end
+        end
+        bot.visible = visible
+    end
+end
+
 function Server:update_view()
     local err, size, msg
     msg = string.format(
@@ -250,11 +337,11 @@ function Server:update_view()
     for i = 1, #self.bots do
         local bot = self.bots[i]
         msg = string.format(
-            "%d %d %d %d %d %d %d %d",
+            "%d %d %d %d %d %d %d %d %d",
             bot.id, bot.cx, bot.cy, math.deg(bot.dir),
             math.deg(bot.gun_dir),
             math.deg(bot.rad_dir), bot.rad_radius,
-            bot.energy
+            bot.visible, bot.energy
         )
         self:publish(msg)
     end
@@ -273,13 +360,14 @@ function Server:control_loop()
         for id = 1, #self.energies do
             energies = energies..string.format(" %d", self.energies[id])
         end
+        self:update_radars()
         for i = 1, #self.bots do
             local bot = self.bots[i]
             msg = string.format("%d %d ", bot.cx, bot.cy)
             msg = msg..string.format("%d ", math.deg(bot.dir))
             msg = msg..string.format("%d ", math.deg(bot.gun_dir))
             msg = msg..string.format("%d ", math.deg(bot.rad_dir))
-            msg = msg..string.format("%d\n", 0)..energies
+            msg = msg..string.format("%d\n", bot.visible)..energies
             cmd = request(bot.sock, msg)
             self:update_bot(bot, cmd)
         end

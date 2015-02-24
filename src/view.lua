@@ -130,11 +130,17 @@ end
 local function draw_bot_radar(renderer, bot)
     local a1 = bot.rad_dir - bot.rad_angle/2
     local a2 = bot.rad_dir + bot.rad_angle/2
+    local r, g, b
+    if bot.visible == 0 then
+        r, g, b = 255, 255, 255
+    else
+        r, g, b = 255, 0, 0
+    end
     gfx.filledPieRGBA(
         renderer,
         bot.cx, bot.cy, bot.rad_radius,
         math.deg(a1), math.deg(a2),
-        255, 255, 255, 96
+        r, g, b, 96
     )
 end
 
@@ -188,7 +194,7 @@ local win = sdl.createWindow(
 
 local rdr = sdl.createRenderer(win, -1, sdl.RENDERER_ACCELERATED)
 
-local pb = string.rep(num.." ", 7)..num
+local pb = string.rep(num.." ", 8)..num
 local pc = num.." "..num
 local pevent = ffi.new("SDL_Event[1]")
 local running = true
@@ -202,13 +208,13 @@ while running do
     w, h, br, fr, ra, n, m = string.match(recv(sock), pattern)
     local bots = {}
     for i = 1, n do
-        local id, bx, by, bd, gd, rd, rr, e = string.match(recv(sock), pb)
+        local id, bx, by, bd, gd, rd, rr, rv, e = string.match(recv(sock), pb)
         local color = COLORS[tonumber(id)]
         bots[i] = {
             cx = tonumber(bx), cy = tonumber(by), dir = math.rad(tonumber(bd)),
             r = color[1], g = color[2], b = color[3], a = 255,
             gun_dir = math.rad(tonumber(gd)), rad_dir = math.rad(tonumber(rd)),
-            energy = tonumber(e)
+            visible = tonumber(rv),energy = tonumber(e)
         }
         set_radar_radius(bots[i], tonumber(rr))
     end
