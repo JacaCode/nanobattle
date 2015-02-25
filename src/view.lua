@@ -232,7 +232,8 @@ while running do
     local vis = 0
     for i = 1, n do
         local id, bx, by, bd, gd, gw, s, rd, rr, rv, e = string.match(recv(sock), pb)
-        local color = COLORS[tonumber(id)]
+        id = tonumber(id)
+        local color = COLORS[(id-1) % #COLORS + 1]
         local bot = {
             cx = tonumber(bx), cy = tonumber(by), dir = math.rad(tonumber(bd)),
             r = color[1], g = color[2], b = color[3], a = 255,
