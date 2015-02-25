@@ -220,6 +220,11 @@ local pb = string.rep(num.." ", 10)..num
 local pc = num.." "..num
 local pevent = ffi.new("SDL_Event[1]")
 local running = true
+local fps_res = 50
+local t1, t2
+t1 = sdl.getTicks()
+local frame = 0
+local fps = 0
 while running do
     while sdl.pollEvent(pevent) == 1 do
         local event = pevent[0]
@@ -266,11 +271,18 @@ while running do
     end
     sdl.renderPresent(rdr)
     local title = string.format(
-        "%s: %d bots, %d visible, %d bullets",
-        TITLE, n, vis, m
+        "%s: %d bots, %d visible, %d bullets (%d fps)",
+        TITLE, n, vis, m, fps
     )
     sdl.setWindowTitle(win, title)
-    sdl.delay(10)
+    sdl.delay(1)
+    frame = frame + 1
+    if frame == fps_res then
+        frame = 0
+        t2 = sdl.getTicks()
+        fps = fps_res * 1000 / (t2-t1)
+        t1 = t2
+    end
 end
 
 sdl.destroyRenderer(rdr)
