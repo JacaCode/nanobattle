@@ -181,7 +181,7 @@ end
 local function draw_bullet(renderer, bullet)
     gfx.filledCircleRGBA(
         renderer, bullet.x, bullet.y, BULLET_RADIUS,
-        64, 56, 20, 255
+        255, 102, 0, 255
     )
 end
 
