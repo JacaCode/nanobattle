@@ -28,10 +28,12 @@ assert(sock, nn.strerror(err))
 rc, err = sock:bind(url)
 assert(rc ~= nil, nn.strerror(err))
 
+local fps = tonumber(arg[1]) or 60
+
 for msg in io.lines() do
     size, err = sock:send(msg, #msg)
     assert(size ~= nil, nn.strerror(err))
     if string.sub(msg, 1, 1) == "!" then
-        sleep(0.01)
+        sleep(1/fps)
     end
 end
