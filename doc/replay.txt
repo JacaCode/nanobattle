@@ -1,0 +1,76 @@
+Gravação e Reprodução de Batalhas
+=================================
+
+Como funciona
+-------------
+
+Durante uma batalha, o servidor envia informações sobre o estado do jogo pela
+rede para que possamos visualizar o que está acontecendo. Um cliente que recebe
+estas informações é chamado de *view*. O uso mais comum de uma view é exibir na
+tela uma representação gráfica da batalha em tempo real. É isto o que o programa
+`view.lua` faz: lê os estados via TCP e mantém uma visualização por meio da SDL.
+Este programa, assim como qualquer view, não precisa saber qual programa está
+enviando os estados. A única exigência é de que os estados sejam enviados de
+acordo com o protocolo de visualização (ver `protocol.txt`). Com isso, podemos
+criar uma view que apenas salva os estados que recebe, "gravando" a batalha. É
+isto o que o programa `record.lua` faz. Tendo a lista de estados de uma batalha,
+podemos replicá-la via TCP, simulando um servidor. O programa `play.lua` faz
+isso. Ao executar este programa, podemos conectar qualquer view (por exemplo, o
+`view.lua`) para visualizar a batalha gravada anteriormente.
+
+Como usar
+---------
+
+Para gravar uma batalha, execute primeiro a view `record.lua`:
+
+```
+$ luajit record.lua > batalha.nnb
+```
+
+Note que `record.lua` imprime as mensagens para o stdout, então você deve
+redirecionar sua saída para um arquivo se quiser salvar os estados.
+
+Em seguida, inicie a batalha normalmente (por exemplo, usando o script
+`run_local.sh`). Quando quiser para a gravação, simplesmente interrompa a view
+`record.lua`.
+
+Para reproduzir a gravação, primeiro execute uma view. Por exemplo:
+
+```
+$ luajit view.lua
+```
+
+Em seguida, execute o `play.lua`, recebendo a batalha salva no stdin:
+
+```
+$ luajit play.lua < batalha.nnb
+```
+
+Neste momento a batalha deve ser exibida na view.
+
+Velocidade de reprodução
+------------------------
+
+É possível controlar a velocidade de reprodução, passando um valor de FPS para o
+`play.lua`:
+
+```
+$ luajit play.lua 200 < batalha.nnb     # rápido
+$ luajit play.lua 20 < batalha.nnb      # câmera lenta
+```
+
+O valor padrão é 60 FPS.
+
+Compressão
+----------
+
+Dependendo da duração da batalha e do número de robôs, o arquivo de estados pode
+ficar muito grande. Como os estados são strings de texto compostas apenas por
+espaços, números e ponto de exclamação, podem ser bem reduzidos por programas de
+compressão. Como exemplo, podemos utilizar o gzip:
+
+```
+$ luajit record.lua > batalha.nnb
+$ gzip batalha.nnb
+$ zcat batalha.nnb.gz | luajit play.lua
+```
