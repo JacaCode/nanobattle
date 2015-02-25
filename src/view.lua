@@ -51,7 +51,7 @@ local COLORS = {
     {255, 0, 0},
     {0, 255, 0},
     {0, 0, 255},
-    {255, 255, 0},
+    {226, 214, 0},
     {0, 255, 255},
     {255, 0, 255},
     {255, 255, 255},
@@ -60,6 +60,14 @@ local COLORS = {
 
 local len = 256
 local buf = ffi.new("char[?]", len)
+
+local function bot2color(id)
+    local n = #COLORS
+    local idx = id - 1
+    local a = idx % n
+    local b = (a + (math.floor(idx / n)) + 1) % n
+    return a+1, b+1
+end
 
 local function recv(sock)
     size, err = sock:recv(buf, len)
@@ -93,7 +101,7 @@ end
 local function draw_bot_body(renderer, bot)
     gfx.filledCircleRGBA(
         renderer, bot.cx, bot.cy, BOT_RADIUS,
-        bot.r, bot.g, bot.b, bot.a
+        bot.color_a[1], bot.color_a[2], bot.color_a[3], 255
     )
     local a = bot.dir
     local b = bot.dir + 2 * math.pi / 3
@@ -105,13 +113,13 @@ local function draw_bot_body(renderer, bot)
         renderer, bot.cx, bot.cy,
         bot.cx + cosa * BOT_RADIUS, bot.cy + sina * BOT_RADIUS,
         bot.cx + cosb * BOT_RADIUS, bot.cy + sinb * BOT_RADIUS,
-        128, 128, 128, bot.a
+        bot.color_b[1], bot.color_b[2], bot.color_b[3], 255
     )
     gfx.filledTrigonRGBA(
         renderer, bot.cx, bot.cy,
         bot.cx + cosa * BOT_RADIUS, bot.cy + sina * BOT_RADIUS,
         bot.cx + cosc * BOT_RADIUS, bot.cy + sinc * BOT_RADIUS,
-        128, 128, 128, bot.a
+        bot.color_b[1], bot.color_b[2], bot.color_b[3], 255
     )
 end
 
@@ -131,7 +139,7 @@ local function draw_bot_gun(renderer, bot)
         bot.cx - cosa * BOT_RADIUS/2, bot.cy - sina * BOT_RADIUS/2,
         bot.cx + cosb * BOT_RADIUS*s, bot.cy + sinb * BOT_RADIUS*s,
         bot.cx + cosc * BOT_RADIUS*s, bot.cy + sinc * BOT_RADIUS*s,
-        0, 0, 0, bot.a
+        0, 0, 0, 255
     )
 end
 
@@ -238,10 +246,11 @@ while running do
     for i = 1, n do
         local id, bx, by, bd, gd, gw, s, rd, rr, rv, e = string.match(recv(sock), pb)
         id = tonumber(id)
-        local color = COLORS[(id-1) % #COLORS + 1]
+        local id_a, id_b = bot2color(id)
+        local color_a, color_b = COLORS[id_a], COLORS[id_b]
         local bot = {
             cx = tonumber(bx), cy = tonumber(by), dir = math.rad(tonumber(bd)),
-            r = color[1], g = color[2], b = color[3], a = 255,
+            color_a = color_a, color_b = color_b,
             gun_dir = math.rad(tonumber(gd)), rad_dir = math.rad(tonumber(rd)),
             wait = tonumber(gw), shield = tonumber(s),
             visible = tonumber(rv), energy = tonumber(e)
