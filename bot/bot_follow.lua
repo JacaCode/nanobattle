@@ -28,7 +28,7 @@ function client.Bot:direction_target(d)
     else
         ry = (self.h-margin - self.y) / s
     end
-    local r = math.min(rx, ry)
+    local r = math.min(rx, ry) * math.random()
     self.tx = self.x + r * c
     self.ty = self.y + r * s
 end
@@ -78,6 +78,10 @@ function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
         end
     end
     self.frame = self.frame + 1
+    if self.frame == 200 then
+        self.action = "+"
+        self.frame = 0
+    end
 end
 
 local bot = client.new_bot("127.0.0.1", 1700)
