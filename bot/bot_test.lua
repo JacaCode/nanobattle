@@ -24,7 +24,7 @@ function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
     if rv > 0 then
         self.action = "+"
         self.rad_cal = "+"
-    elseif es[self.id] < 50 and math.random() < 0.1 then
+    elseif es[self.id] < 50 and math.random() < 0.05 then
         self.action = "-"
         self.rad_cal = "-"
     else

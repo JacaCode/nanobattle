@@ -52,6 +52,7 @@ function client.Bot:init(w, h, r, n)
     self.tx, self.ty = w/2, h/2
     self.bot_move = "+"
     self.dd = ({-90, 90})[math.random(2)]
+    self.e = 100
 end
 
 function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
@@ -62,16 +63,17 @@ function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
     if self:follow() < 2*self.r then
         self:random_target()
     end
+    local e = es[self.id]
     if rv == 0 then
         self.action = "="
         self.rad_rot = "+"
         self.gun_rot = "+"
-        self.dd = ({-90, 90})[math.random(2)]
+        self.dd = ({-135, 135})[math.random(2)]
     else
         self.action = "+"
         self.rad_rot = "="
         self.gun_rot = "="
-        if es[self.id] < 50 then
+        if e < 50 then
             self:direction_target(rd+self.dd)
         else
             self:direction_target(rd)
@@ -81,6 +83,10 @@ function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
     if self.frame == 200 then
         self.action = "+"
         self.frame = 0
+    end
+    if e < self.e then
+        self.action = "+"
+        self.e = e
     end
 end
 
