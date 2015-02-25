@@ -210,10 +210,24 @@ function Server:init_bots()
     self.bots = {}
     self.energies = {}
     for i = 1, #self.names do
+        local cx, cy
+        repeat
+            local ok = true
+            cx = math.random(BOT_RADIUS, self.width-BOT_RADIUS)
+            cy = math.random(BOT_RADIUS, self.height-BOT_RADIUS)
+            for j = 1, #self.bots do
+                local bot = self.bots[j]
+                if disk_collision(
+                    cx, cy, BOT_RADIUS, bot.cx, bot.cy, BOT_RADIUS
+                ) then
+                    ok = false
+                    break
+                end
+            end
+        until ok
         local dir = math.random()*2*math.pi
         local bot = {
-            cx = math.random(BOT_RADIUS, self.width-BOT_RADIUS),
-            cy = math.random(BOT_RADIUS, self.height-BOT_RADIUS),
+            cx = cx, cy = cy,
             dir = dir, gun_dir = dir, rad_dir = dir,
             energy = 100, wait = 0, shield = 0, id = i
         }
