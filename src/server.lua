@@ -348,9 +348,9 @@ function Server:update_bot(bot, cmd)
     if ok then
         bot.cx, bot.cy = cx, cy
     end
-    bot.dir = (bot.dir + rot * STEP * math.pi / 30) % (2 * math.pi)
-    bot.gun_dir = (bot.gun_dir + gun_rot * STEP * math.pi / 30) % (2 * math.pi)
-    bot.rad_dir = (bot.rad_dir + rad_rot * STEP * math.pi / 30) % (2 * math.pi)
+    bot.dir = (bot.dir + rot * STEP * math.pi / 45) % (2 * math.pi)
+    bot.gun_dir = (bot.gun_dir + gun_rot * STEP * math.pi / 45) % (2 * math.pi)
+    bot.rad_dir = (bot.rad_dir + rad_rot * STEP * math.pi / 45) % (2 * math.pi)
     local radius = bot.rad_radius + rad_cal * STEP
     radius = math.max(RADAR_MIN_RADIUS, radius)
     radius = math.min(RADAR_MAX_RADIUS, radius)
