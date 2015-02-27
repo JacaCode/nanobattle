@@ -288,7 +288,7 @@ while running do
     end
     sdl.renderPresent(rdr)
     local title = string.format(
-        "%s: %d bots, %d visible, %d bullets (%d fps)",
+        "%s: %2d bots, %2d visible, %2d bullets (%d fps)",
         TITLE, n, vis, m, fps
     )
     sdl.setWindowTitle(win, title)
