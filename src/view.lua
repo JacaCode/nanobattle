@@ -5,6 +5,10 @@ local nn = require "nanomsg"
 local sdl = require "sdl2"
 
 ffi.cdef[[
+int aacircleRGBA(
+    SDL_Renderer *renderer, Sint16 x, Sint16 y, Sint16 rad,
+    Uint8 r, Uint8 g, Uint8 b, Uint8 a
+);
 int filledCircleRGBA(
     SDL_Renderer *renderer, Sint16 x, Sint16 y, Sint16 rad,
     Uint8 r, Uint8 g, Uint8 b, Uint8 a
@@ -190,6 +194,10 @@ local function draw_bullet(renderer, bullet)
     gfx.filledCircleRGBA(
         renderer, bullet.x, bullet.y, BULLET_RADIUS,
         255, 102, 0, 255
+    )
+    gfx.aacircleRGBA(
+        renderer, bullet.x, bullet.y, BULLET_RADIUS,
+        255, 255, 255, 255
     )
 end
 
