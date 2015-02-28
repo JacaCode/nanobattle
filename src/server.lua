@@ -229,7 +229,7 @@ function Server:init_bots()
         local bot = {
             cx = cx, cy = cy,
             dir = dir, gun_dir = dir, rad_dir = dir,
-            energy = 100, wait = 0, shield = 0, id = i
+            energy = 100, wait = 0, shield = 0, visible = 0, id = i
         }
         set_radar_radius(bot, 8*BOT_RADIUS)
         bot.sock = bind(self.port+i, nn.REQ)
