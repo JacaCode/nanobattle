@@ -52,6 +52,7 @@ function client.Bot:init(w, h, r, n)
     self.tx, self.ty = w/2, h/2
     self.bot_move = "+"
     self.dd = ({-90, 90})[math.random(2)]
+    self.direction = ({"-", "+"})[math.random(2)]
     self.e = 100
 end
 
@@ -66,8 +67,8 @@ function client.Bot:turn(bx, by, bd, gd, rd, rv, es)
     local e = es[self.id]
     if rv == 0 then
         self.action = "="
-        self.rad_rot = "+"
-        self.gun_rot = "+"
+        self.rad_rot = self.direction
+        self.gun_rot = self.direction
         self.dd = ({-135, 135})[math.random(2)]
     else
         self.action = "+"
