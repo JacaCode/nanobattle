@@ -424,7 +424,6 @@ function Server:control_loop()
         for id = 1, #self.energies do
             energies = energies..string.format(" %d", self.energies[id])
         end
-        self:update_radars()
         for i = 1, #self.bots do
             local bot = self.bots[i]
             msg = string.format("%d %d ", bot.cx, bot.cy)
@@ -436,6 +435,7 @@ function Server:control_loop()
             self:update_bot(bot, cmd)
         end
         self:update_bullets()
+        self:update_radars()
         self:update_view()
         sleep(0.01)
     end
